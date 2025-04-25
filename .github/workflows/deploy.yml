@@ -14,15 +14,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up SSH
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.CPANEL_HOST }}
           username: ${{ secrets.CPANEL_USER }}
-          key: ${{ secrets.CPANEL_PRIVATE_KEY }}
-          port: 22
+          password: ${{ secrets.CPANEL_PASSWORD }}
           script: |
-            cd /home/mcm_backend
+            cd /home/mcm/mcm_backend
             git pull origin main
-            chmod +x deploy.sh
+            chmod +x deploy.sh 
             ./deploy.sh
