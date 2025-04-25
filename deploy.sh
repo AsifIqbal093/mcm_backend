@@ -1,5 +1,5 @@
 #!/bin/bash
-cd ~/home/mcm/mcm_backend
+cd /home/mcm/mcm_backend
 
 # Activate virtual environment
 source venv/bin/activate
