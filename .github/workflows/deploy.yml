@@ -21,7 +21,7 @@ jobs:
           username: ${{ secrets.CPANEL_USER }}
           password: ${{ secrets.CPANEL_PASSWORD }}
           script: |
-            cd /home/mcm/mcm_backend
+            cd /home/mcm_backend
             git pull origin main
             chmod +x deploy.sh 
             ./deploy.sh
