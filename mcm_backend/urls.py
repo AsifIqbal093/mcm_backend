@@ -37,6 +37,7 @@ urlpatterns = [
         url_name='api-schema'
         ), name='api-docs'),
     path('api/user/', include('user.urls')),
+    path('api/estore/', include('estore.urls')),
 
     path('', home, name='home'),
 ]
