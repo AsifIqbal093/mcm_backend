@@ -1,7 +1,0 @@
-# .env file
-DB_NAME=mcm_db
-DB_USER=mcm_user
-DB_PASS="mcm_pass"
-DJANGO_ALLOWED_HOSTS=localhost
-DB_PORT=3306
-DJANGO_SECRET_KEY="django-insecure-3%1=_hr)brs7=$)=5_4(+%(8cj4d*9r%4ji_(i^8i_a5q^o%s9"
