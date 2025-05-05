@@ -2,8 +2,6 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 
-
-
 # ------------------------
 # E-Commerce Models Below
 # ------------------------
@@ -11,6 +9,8 @@ from django.utils import timezone
 class Category(models.Model):
     name = models.CharField(max_length=100)
     slug = models.SlugField(unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    description = models.TextField(blank=True)
     parent_category = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL, related_name='subcategories')
 
     def __str__(self):
@@ -90,3 +90,14 @@ class Payment(models.Model):
     def __str__(self):
         return f"Payment for Order #{self.order.pk}"
 
+
+class UserSettings(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    full_name = models.CharField(max_length=100)
+    display_name = models.CharField(max_length=50)
+    role = models.CharField(max_length=50)
+    address = models.TextField(blank=True, null=True)
+    bio = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.user.username} Settings"

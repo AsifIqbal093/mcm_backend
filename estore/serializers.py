@@ -1,6 +1,6 @@
 # ---------------- New Model Serializers ---------------- #
 from rest_framework import serializers
-
+from estore.models import UserSettings
 from .models import Category, Product, Cart, CartItem, Order, OrderItem, Payment
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -47,3 +47,10 @@ class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
         fields = '__all__'
+
+
+
+class UserSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserSettings
+        fields = ['id', 'user', 'full_name', 'display_name', 'role', 'address', 'bio']

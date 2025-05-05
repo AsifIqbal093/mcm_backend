@@ -1,7 +1,8 @@
 from django.shortcuts import render
 from rest_framework import viewsets, permissions, authentication
 from rest_framework.permissions import BasePermission, SAFE_METHODS
-
+from estore.models import UserSettings
+from estore.serializers import UserSettingsSerializer
 from estore.models import Category, Product, Cart, CartItem, Order, OrderItem, Payment
 
 from estore.serializers import (
@@ -121,8 +122,23 @@ class PaymentViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return Payment.objects.filter(user=self.request.user)
+        return Payment.objects.filter(order__user=self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+# ------------------- SETTING ------------------- #
+
+class UserSettingsViewSet(viewsets.ModelViewSet):
+    """
+    Manage user settings.
+    """
+    serializer_class = UserSettingsSerializer
+    queryset = UserSettings.objects.all()
+    authentication_classes = [authentication.TokenAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    def get_queryset(self):
+        """
+        Filter queryset to return only the settings of the authenticated user.
+        """
+        return UserSettings.objects.filter(user=self.request.user)
