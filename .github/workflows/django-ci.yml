@@ -1,13 +1,14 @@
 name: Django CI/CD
 
-on:  
+on:
   push:
-    branches-ignore:  
+    branches-ignore:
       - main
   pull_request:
     branches:
-      - main  
+      - main
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -51,7 +52,7 @@ jobs:
           source venv/bin/activate
           pip install --upgrade pip
           pip install -r requirements.txt
-
+          pip install Pillow  # ✅ Explicitly install Pillow
 
       - name: 🔑 Create .env file
         run: |
@@ -63,7 +64,7 @@ jobs:
           echo "DB_PORT=3306" >> .env
           echo "DJANGO_SETTINGS_MODULE=mcm_backend.settings" >> .env
 
-      - name: Wait for MySQL to be ready
+      - name: ⏳ Wait for MySQL to be ready
         run: |
           until mysql -h 127.0.0.1 -uroot -proot -e "SELECT 1"; do
             echo "Waiting for MySQL to be ready..."
@@ -72,29 +73,23 @@ jobs:
 
       - name: 🎭 Grant Database Permissions
         run: |
-          sudo apt-get install mysql-client
+          sudo apt-get install -y mysql-client
           mysql -h 127.0.0.1 -uroot -proot -e "
             CREATE DATABASE IF NOT EXISTS test_${{ secrets.DB_NAME }};
-          "
-          mysql -h 127.0.0.1 -uroot -proot -e "
             CREATE USER IF NOT EXISTS '${{ secrets.DB_USER }}'@'%' IDENTIFIED BY '${{ secrets.DB_PASS }}';
-          "
-          mysql -h 127.0.0.1 -uroot -proot -e "
-            GRANT ALL PRIVILEGES ON test_${{ secrets.DB_NAME }}.* TO '${{ secrets.DB_USER }}'@'%';
-            GRANT ALL PRIVILEGES ON ${{ secrets.DB_NAME }}.* TO '${{ secrets.DB_USER }}'@'%';
+            GRANT ALL PRIVILEGES ON *.* TO '${{ secrets.DB_USER }}'@'%';
             FLUSH PRIVILEGES;"
-      
 
-      - name: 🎭 Run Migrations
+      - name: 🧱 Run Migrations
         run: |
           source venv/bin/activate
-          $env:PYTHONPATH = "$(Get-Location)\mcm_backend"
+          export PYTHONPATH=$(pwd)/mcm_backend
           python manage.py migrate
 
       - name: 🧪 Run Tests
         run: |
           source venv/bin/activate
-          export PYTHONPATH=$(pwd)/mcm_backend  # Ensure Python can find the module
+          export PYTHONPATH=$(pwd)/mcm_backend
           python manage.py test --keepdb
 
       - name: ✅ Lint Code
