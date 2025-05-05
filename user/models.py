@@ -9,6 +9,7 @@ from django.contrib.auth.models import (
     PermissionsMixin,
 )
 
+
 class UserManager(BaseUserManager):
     """Manager for users."""
 
@@ -16,6 +17,12 @@ class UserManager(BaseUserManager):
         """Create, save and return a new user."""
         if not email:
             raise ValueError('User must have an email!')
+
+        # Handle 'name' to map it to 'full_name'
+        name = extra_fields.pop('name', None)
+        if name:
+            extra_fields['full_name'] = name
+
         user = self.model(email=self.normalize_email(email), **extra_fields)
         user.set_password(password)
         user.role = "User"
@@ -33,9 +40,9 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
 
         return user
-    
+
     def create_adminuser(self, email, password):
-        """Create, save and return a admin user."""
+        """Create, save and return an admin user."""
         if not email:
             raise ValueError('User must have an email!')
         user = self.create_user(email, password)
@@ -56,3 +63,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
+
+    @property
+    def name(self):
+        return self.full_name
+
+    @name.setter
+    def name(self, value):
+        self.full_name = value
