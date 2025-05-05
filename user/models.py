@@ -10,14 +10,15 @@ class UserManager(BaseUserManager):
     """Manager for users."""
 
     def create_user(self, email, password=None, **extra_fields):
-        """Create, save and return a new user."""
+        """Create and return a user with an email and password."""
         if not email:
             raise ValueError('User must have an email!')
-        user = self.model(email=self.normalize_email(email), **extra_fields)
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
         user.set_password(password)
-        user.role = "User"
         user.save(using=self._db)
         return user
+
 
     def create_superuser(self, email, password):
         """Create, save and return a super user."""
