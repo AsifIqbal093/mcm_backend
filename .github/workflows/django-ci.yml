@@ -1,3 +1,116 @@
+# name: Django CI/CD
+
+# on:  
+#   push:
+#     branches-ignore:  
+#       - main
+#   pull_request:
+#     branches:
+#       - main  
+#   workflow_dispatch:
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
+
+#     services:
+#       mysql:
+#         image: mysql:8.0
+#         env:
+#           MYSQL_ROOT_PASSWORD: root
+#           MYSQL_DATABASE: ${{ secrets.DB_NAME }}
+#           MYSQL_USER: ${{ secrets.DB_USER }}
+#           MYSQL_PASSWORD: ${{ secrets.DB_PASS }}
+#         ports:
+#           - 3306:3306
+#         options: >-
+#           --health-cmd "mysqladmin ping --host=localhost --silent"
+#           --health-interval 10s
+#           --health-timeout 5s
+#           --health-retries 3
+
+#     steps:
+#       - name: 🛠️ Checkout repository
+#         uses: actions/checkout@v3
+
+#       - name: 🔧 Set up Python
+#         uses: actions/setup-python@v4
+#         with:
+#           python-version: "3.11"
+
+#       - name: 🗄️ Cache dependencies
+#         uses: actions/cache@v3
+#         with:
+#           path: ~/.cache/pip
+#           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+#           restore-keys: |
+#             ${{ runner.os }}-pip-
+
+#       - name: 📦 Install dependencies
+#         run: |
+#           python -m venv venv
+#           source venv/bin/activate
+#           pip install --upgrade pip
+#           pip install -r requirements.txt
+
+#       - name: 🔑 Create .env file
+#         run: |
+#           echo "DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}" >> .env
+#           echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
+#           echo "DB_USER=${{ secrets.DB_USER }}" >> .env
+#           echo "DB_PASS=${{ secrets.DB_PASS }}" >> .env
+#           echo "DB_HOST=127.0.0.1" >> .env
+#           echo "DB_PORT=3306" >> .env
+#           echo "DJANGO_SETTINGS_MODULE=mcm_backend.settings" >> .env
+
+#       - name: Wait for MySQL to be ready
+#         run: |
+#           until mysql -h 127.0.0.1 -uroot -proot -e "SELECT 1"; do
+#             echo "Waiting for MySQL to be ready..."
+#             sleep 5
+#           done
+
+#       - name: 🎭 Grant Database Permissions
+#         run: |
+#           sudo apt-get install mysql-client
+#           mysql -h 127.0.0.1 -uroot -proot -e "
+#             CREATE DATABASE IF NOT EXISTS test_${{ secrets.DB_NAME }};
+#           "
+#           mysql -h 127.0.0.1 -uroot -proot -e "
+#             CREATE USER IF NOT EXISTS '${{ secrets.DB_USER }}'@'%' IDENTIFIED BY '${{ secrets.DB_PASS }}';
+#           "
+#           mysql -h 127.0.0.1 -uroot -proot -e "
+#             GRANT ALL PRIVILEGES ON test_${{ secrets.DB_NAME }}.* TO '${{ secrets.DB_USER }}'@'%';
+#             GRANT ALL PRIVILEGES ON ${{ secrets.DB_NAME }}.* TO '${{ secrets.DB_USER }}'@'%';
+#             FLUSH PRIVILEGES;"
+      
+
+#       # - name: 🎭 Run Migrations
+#       #   run: |
+#       #     source venv/bin/activate
+#       #     export PYTHONPATH=$(pwd)/mcm_backend  # Ensure Python can find the module
+#       #     python manage.py migrate
+#       - name: 🎭 Run Migrations
+#         run: |
+#           export PYTHONPATH=$(pwd)/mcm_backend
+#           venv/bin/python manage.py migrate
+#       - name: 🧪 Run Tests
+#         run: |
+#           source venv/bin/activate
+#           export PYTHONPATH=$(pwd)/mcm_backend  # Ensure Python can find the module
+#           python manage.py test --keepdb
+
+#       - name: ✅ Lint Code
+#         run: |
+#           source venv/bin/activate
+#           pip install flake8
+#           flake8 . --exit-zero
+
+#       - name: 🚀 Check PR Status
+#         if: github.event_name == 'pull_request'
+#         run: echo "PR is ready for review if all checks pass!"
+
+
+
 name: Django CI/CD
 
 on:  
@@ -8,6 +121,7 @@ on:
     branches:
       - main  
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -35,7 +149,7 @@ jobs:
       - name: 🔧 Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: "3.11"
 
       - name: 🗄️ Cache dependencies
         uses: actions/cache@v3
@@ -48,9 +162,8 @@ jobs:
       - name: 📦 Install dependencies
         run: |
           python -m venv venv
-          source venv/bin/activate
-          pip install --upgrade pip
-          pip install -r requirements.txt
+          venv/bin/pip install --upgrade pip
+          venv/bin/pip install -r requirements.txt
 
       - name: 🔑 Create .env file
         run: |
@@ -62,7 +175,7 @@ jobs:
           echo "DB_PORT=3306" >> .env
           echo "DJANGO_SETTINGS_MODULE=mcm_backend.settings" >> .env
 
-      - name: Wait for MySQL to be ready
+      - name: ⏳ Wait for MySQL to be ready
         run: |
           until mysql -h 127.0.0.1 -uroot -proot -e "SELECT 1"; do
             echo "Waiting for MySQL to be ready..."
@@ -82,25 +195,21 @@ jobs:
             GRANT ALL PRIVILEGES ON test_${{ secrets.DB_NAME }}.* TO '${{ secrets.DB_USER }}'@'%';
             GRANT ALL PRIVILEGES ON ${{ secrets.DB_NAME }}.* TO '${{ secrets.DB_USER }}'@'%';
             FLUSH PRIVILEGES;"
-      
 
       - name: 🎭 Run Migrations
         run: |
-          source venv/bin/activate
-          export PYTHONPATH=$(pwd)/mcm_backend  # Ensure Python can find the module
-          python manage.py migrate
+          export PYTHONPATH=$(pwd)/mcm_backend
+          venv/bin/python manage.py migrate
 
       - name: 🧪 Run Tests
         run: |
-          source venv/bin/activate
-          export PYTHONPATH=$(pwd)/mcm_backend  # Ensure Python can find the module
-          python manage.py test --keepdb
+          export PYTHONPATH=$(pwd)/mcm_backend
+          venv/bin/python manage.py test --keepdb
 
       - name: ✅ Lint Code
         run: |
-          source venv/bin/activate
-          pip install flake8
-          flake8 . --exit-zero
+          venv/bin/pip install flake8
+          venv/bin/flake8 . --exit-zero
 
       - name: 🚀 Check PR Status
         if: github.event_name == 'pull_request'
