@@ -84,15 +84,12 @@ jobs:
             FLUSH PRIVILEGES;"
       
 
-      # - name: 🎭 Run Migrations
-      #   run: |
-      #     source venv/bin/activate
-      #     export PYTHONPATH=$(pwd)/mcm_backend  # Ensure Python can find the module
-      #     python manage.py migrate
       - name: 🎭 Run Migrations
         run: |
-          export PYTHONPATH=$(pwd)/mcm_backend
-          venv/bin/python manage.py migrate
+          source venv/bin/activate
+          export PYTHONPATH=$(pwd)/mcm_backend  # Ensure Python can find the module
+          python manage.py migrate
+
       - name: 🧪 Run Tests
         run: |
           source venv/bin/activate
