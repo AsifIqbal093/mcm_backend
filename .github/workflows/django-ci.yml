@@ -1,12 +1,12 @@
 name: Django CI/CD
 
-on:
+on:  
   push:
-    branches-ignore:
+    branches-ignore:  
       - main
   pull_request:
     branches:
-      - main
+      - main  
   workflow_dispatch:
 
 jobs:
@@ -52,7 +52,7 @@ jobs:
           source venv/bin/activate
           pip install --upgrade pip
           pip install -r requirements.txt
-          pip install Pillow  # ✅ Explicitly install Pillow
+          pip install Pillow
 
       - name: 🔑 Create .env file
         run: |
@@ -64,23 +64,24 @@ jobs:
           echo "DB_PORT=3306" >> .env
           echo "DJANGO_SETTINGS_MODULE=mcm_backend.settings" >> .env
 
-      - name: ⏳ Wait for MySQL to be ready
+      - name: ⏳ Wait for MySQL
         run: |
           until mysql -h 127.0.0.1 -uroot -proot -e "SELECT 1"; do
             echo "Waiting for MySQL to be ready..."
             sleep 5
           done
 
-      - name: 🎭 Grant Database Permissions
+      - name: 🧾 Setup DB and Users
         run: |
           sudo apt-get install -y mysql-client
           mysql -h 127.0.0.1 -uroot -proot -e "
             CREATE DATABASE IF NOT EXISTS test_${{ secrets.DB_NAME }};
             CREATE USER IF NOT EXISTS '${{ secrets.DB_USER }}'@'%' IDENTIFIED BY '${{ secrets.DB_PASS }}';
-            GRANT ALL PRIVILEGES ON *.* TO '${{ secrets.DB_USER }}'@'%';
+            GRANT ALL PRIVILEGES ON test_${{ secrets.DB_NAME }}.* TO '${{ secrets.DB_USER }}'@'%';
+            GRANT ALL PRIVILEGES ON ${{ secrets.DB_NAME }}.* TO '${{ secrets.DB_USER }}'@'%';
             FLUSH PRIVILEGES;"
 
-      - name: 🧱 Run Migrations
+      - name: 🔄 Run Migrations
         run: |
           source venv/bin/activate
           export PYTHONPATH=$(pwd)/mcm_backend
@@ -98,6 +99,6 @@ jobs:
           pip install flake8
           flake8 . --exit-zero
 
-      - name: 🚀 Check PR Status
+      - name: 🚀 PR Status
         if: github.event_name == 'pull_request'
         run: echo "PR is ready for review if all checks pass!"
