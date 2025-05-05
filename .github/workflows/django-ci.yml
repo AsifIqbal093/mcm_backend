@@ -87,7 +87,7 @@ jobs:
       - name: 🎭 Run Migrations
         run: |
           source venv/bin/activate
-          export PYTHONPATH=$(pwd)/mcm_backend  # Ensure Python can find the module
+          $env:PYTHONPATH = "$(Get-Location)\mcm_backend"
           python manage.py migrate
 
       - name: 🧪 Run Tests
