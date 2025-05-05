@@ -42,18 +42,10 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=255, unique=True)
-    full_name = models.CharField(max_length=255)
+    full_name = models.CharField(max_length=255)  # or `name`
     is_active = models.BooleanField(default=True)
-    role = models.CharField(max_length=20, choices=[
-        ('Super Admin', 'Super Admin'),
-        ('Admin', 'Admin'),
-        ('User', 'User')
-    ])
+    is_staff = models.BooleanField(default=False)
 
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
-
-    @property
-    def name(self):
-        return self.full_name
