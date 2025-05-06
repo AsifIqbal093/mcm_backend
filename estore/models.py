@@ -80,6 +80,23 @@ class OrderItem(models.Model):
         return f"{self.quantity} x {self.product.name}"
 
 
+class Client(models.Model):
+    STATUS_CHOICES = (
+        ('Ativo', 'Ativo'),
+        ('Inativo', 'Inativo'),
+    )
+
+    name = models.CharField(max_length=255)
+    contact = models.CharField(max_length=20)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    orders = models.PositiveIntegerField(default=0)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Ativo')
+
+    def __str__(self):
+        return self.name
+
+
+
 class Payment(models.Model):
     order = models.OneToOneField(Order, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
