@@ -1,88 +1,64 @@
 # ---------------- New Model Serializers ---------------- #
 from rest_framework import serializers
-from estore.models import UserSettings
-from .models import Category, Product, Cart, CartItem, Order, OrderItem, Payment, Client
+from .models import Product, Category, SubCategory, Brand, Inventory
+
+class BrandSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Brand
+        fields = ['id', 'brand_name']
+
+
+class SubCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubCategory
+        fields = ['id', 'name']
 
 class CategorySerializer(serializers.ModelSerializer):
+    sub_categories = SubCategorySerializer(many=True)
+
     class Meta:
         model = Category
-        fields = '__all__'
+        fields = ['id', 'name', 'slug', 'description', 'created_at', 'sub_categories']
 
-class ClientSerializer(serializers.ModelSerializer):
+    def create(self, validated_data):
+        sub_categories_data = validated_data.pop('sub_categories')
+        category = Category.objects.create(**validated_data)
+        for sub_category_data in sub_categories_data:
+            sub_category = SubCategory.objects.create(**sub_category_data)
+            category.sub_categories.add(sub_category)
+        return category
+
+
+class InventorySerializer(serializers.ModelSerializer):
     class Meta:
-        model = Client
-        fields = '__all__'
+        model = Inventory
+        fields = ['id', 'SKU', 'stock', 'status']
 
 class ProductSerializer(serializers.ModelSerializer):
+    # These fields will accept only valid primary keys (like a dropdown/choice)
+    brand = serializers.PrimaryKeyRelatedField(queryset=Brand.objects.all())
+    category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all())
+
+    # Optional: include subcategory and inventory as nested objects for read-only
+    inventory = InventorySerializer(read_only=True)
+
     class Meta:
         model = Product
-        fields = '__all__'
-
-
-class CartItemSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CartItem
-        fields = '__all__'
-
-
-class CartSerializer(serializers.ModelSerializer):
-    items = CartItemSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Cart
-        fields = '__all__'
-
-
-class OrderItemSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = OrderItem
-        fields = '__all__'
-
-
-class OrderSerializer(serializers.ModelSerializer):
-    items = OrderItemSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Order
-        fields = '__all__'
-
-
-class PaymentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Payment
-        fields = '__all__'
-
-
-
-class UserSettingsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserSettings
-        fields = ['id', 'user', 'full_name', 'display_name', 'role', 'address', 'bio']
-
-
-# --- Dashboard-Specific Serializers ---
-
-class DashboardProductSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Product
-        fields = ['name']
-
-class DashboardOrderItemSerializer(serializers.ModelSerializer):
-    product = DashboardProductSerializer(read_only=True)
-
-    class Meta:
-        model = OrderItem
-        fields = ['product', 'quantity', 'price']
-
-class DashboardPaymentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Payment
-        fields = ['amount', 'transaction_id', 'payment_method', 'payment_date']
-
-class RecentOrderDashboardSerializer(serializers.ModelSerializer):
-    items = DashboardOrderItemSerializer(many=True, read_only=True)
-    payment = DashboardPaymentSerializer(source='payment', read_only=True)
-
-    class Meta:
-        model = Order
-        fields = ['id', 'created_at', 'status', 'items', 'payment']
+        fields = [
+            'id',
+            'product_name',
+            'reference',
+            'regular_price',
+            'sale_price',
+            'sale_quantity',
+            'date',
+            'sold_items',
+            'product_summary',
+            'product_description',
+            'product_thumbnail',
+            'product_gallery',
+            'product_video',
+            'brand',
+            'category',
+            'inventory',
+        ]
