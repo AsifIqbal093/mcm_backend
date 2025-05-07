@@ -1,6 +1,6 @@
 # ---------------- New Model Serializers ---------------- #
 from rest_framework import serializers
-from .models import Product, Category, SubCategory, Brand, Inventory
+from .models import Product,ProductGallery, Category, SubCategory, Brand
 
 class BrandSerializer(serializers.ModelSerializer):
     class Meta:
@@ -29,18 +29,19 @@ class CategorySerializer(serializers.ModelSerializer):
         return category
 
 
-class InventorySerializer(serializers.ModelSerializer):
+class ProductGallerySerializer(serializers.ModelSerializer):
     class Meta:
-        model = Inventory
-        fields = ['id', 'SKU', 'stock', 'status']
+        model = ProductGallery
+        fields = ['id', 'image']
 
 class ProductSerializer(serializers.ModelSerializer):
-    # These fields will accept only valid primary keys (like a dropdown/choice)
-    brand = serializers.PrimaryKeyRelatedField(queryset=Brand.objects.all())
-    category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all())
-
-    # Optional: include subcategory and inventory as nested objects for read-only
-    inventory = InventorySerializer(read_only=True)
+    product_thumbnail = serializers.ImageField(required=False)
+    gallery = ProductGallerySerializer(many=True, required=False, read_only=True)
+    product_gallery = serializers.ListField(
+        child=serializers.ImageField(),
+        write_only=True,
+        required=False
+    )
 
     class Meta:
         model = Product
@@ -57,8 +58,20 @@ class ProductSerializer(serializers.ModelSerializer):
             'product_description',
             'product_thumbnail',
             'product_gallery',
+            'gallery',
             'product_video',
             'brand',
             'category',
-            'inventory',
+            'stock',
+            'SKU',
+            'status',
         ]
+
+    def create(self, validated_data):
+        gallery_images = validated_data.pop("product_gallery", [])
+        product = Product.objects.create(**validated_data)
+
+        for image in gallery_images:
+            ProductGallery.objects.create(product=product, image=image)
+
+        return product
