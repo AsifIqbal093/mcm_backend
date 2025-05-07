@@ -22,14 +22,27 @@ class Category(models.Model):
 class Product(models.Model):
     id = models.AutoField(primary_key=True)
 
+    # General Info
     name = models.CharField(max_length=200)
     SKU = models.CharField(max_length=100, unique=True, default="DEFAULT-SKU")
-
     price = models.DecimalField(max_digits=10, decimal_places=2)
     stock = models.PositiveIntegerField()
-    image = models.ImageField(upload_to='products/', null=True, blank=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='products/', null=True, blank=True)
     date = models.DateTimeField(auto_now_add=True)
+
+    # Extended Fields
+    reference = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    product_summary = models.TextField(blank=True, null=True)
+    product_email = models.EmailField(blank=True, null=True)
+    last_print = models.DateField(blank=True, null=True)
+    last_quantity = models.PositiveIntegerField(blank=True, null=True)
+    real_items = models.PositiveIntegerField(blank=True, null=True)
+    product_description = models.TextField(blank=True, null=True)
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
