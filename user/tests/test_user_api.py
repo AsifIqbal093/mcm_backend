@@ -32,6 +32,10 @@ class PublicUserApiTests(TestCase):
             'email': 'test@example.com',
             'password': 'testpass123',
             'full_name': 'Test User',
+            'address': 'Test Address',
+            'bio': 'Test Bio',
+            'display_name': 'Test Name',
+            'role': 'user',
         }
         res = self.client.post(CREATE_USER_URL, payload)
 
@@ -70,7 +74,11 @@ class PublicUserApiTests(TestCase):
     def test_create_token_for_user(self):
         """Test generates token for valid Credentials."""
         user_details = {
-            'full_name': 'Test Name',
+            'display_name': 'Test Name',
+            'full_name': 'Test User',
+            'address': 'Test Address',
+            'bio': 'Test Bio',
+            'role': 'user',
             'email': 'test@example.com',
             'password': 'test-user-password123',
         }
@@ -78,7 +86,13 @@ class PublicUserApiTests(TestCase):
 
         payload = {
             'email': user_details['email'],
+            'full_name': user_details['full_name'],
             'password': user_details['password'],
+            'bio': user_details['bio'],
+            'address': user_details['address'],
+            'display_name': user_details['display_name'],
+            'role': user_details['role'],
+
         }
         res = self.client.post(TOKEN_URL, payload)
 
