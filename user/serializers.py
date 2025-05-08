@@ -1,7 +1,7 @@
 """
 Serializers for the user API view.
 """
-
+from .models import User
 from django.contrib.auth import (
     get_user_model,
     authenticate,
@@ -15,7 +15,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = get_user_model()
-        fields = ['email', 'password', 'full_name', 'role', 'address', 'bio', 'display_name']
+        fields = ['email', 'password', 'full_name', 'role', 'address', 'bio', 'display_name', 'contact_number']
         extra_kwargs = {
             'password': {
                 'write_only': True,
@@ -62,3 +62,16 @@ class AuthTokenSerializer(serializers.Serializer):
 
         attrs['user'] = user
         return attrs
+
+
+# ---------------- Client Serializer ---------------- #
+class ClientSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the User model to display client details.
+    """
+    class Meta:
+        model = User
+        fields = [
+            'id', 'full_name', 'contact_number', 'ammount', 
+            'order_count', 'is_active'
+        ]
