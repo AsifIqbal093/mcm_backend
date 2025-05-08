@@ -27,7 +27,22 @@ class CategorySerializer(serializers.ModelSerializer):
             sub_category = SubCategory.objects.create(**sub_category_data)
             category.sub_categories.add(sub_category)
         return category
+    
+    def update(self, instance, validated_data):
+        sub_categories_data = validated_data.pop('sub_categories', [])
 
+        # Update category fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        # Optional: clear and re-add subcategories
+        instance.sub_categories.clear()
+        for sub_category_data in sub_categories_data:
+            sub_category, _ = SubCategory.objects.get_or_create(**sub_category_data)
+            instance.sub_categories.add(sub_category)
+
+        return instance
 
 class ProductGallerySerializer(serializers.ModelSerializer):
     class Meta:

@@ -7,6 +7,8 @@ from django.contrib.auth import (
     authenticate,
 )
 from rest_framework import serializers
+from orders.models import Order
+from django.db.models import Sum, Count
 
 # ---------------- User Serializers ---------------- #
 
@@ -64,14 +66,19 @@ class AuthTokenSerializer(serializers.Serializer):
         return attrs
 
 
-# ---------------- Client Serializer ---------------- #
-class ClientSerializer(serializers.ModelSerializer):
-    """
-    Serializer for the User model to display client details.
-    """
+class UserAdminSerializer(serializers.ModelSerializer):
+    total_order_amount = serializers.SerializerMethodField()
+    total_orders = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = [
-            'id', 'full_name', 'contact_number', 'ammount', 
-            'order_count', 'is_active'
+            'id', 'full_name', 'contact_number', 'is_active',
+            'total_order_amount', 'total_orders'
         ]
+
+    def get_total_order_amount(self, obj):
+        return Order.objects.filter(user=obj).aggregate(total=Sum('amount'))['total'] or 0
+
+    def get_total_orders(self, obj):
+        return Order.objects.filter(user=obj).count()

@@ -5,7 +5,6 @@ from .models import Product, Category, Brand
 from .serializers import ProductSerializer, CategorySerializer, BrandSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from user.models import User
-from user.serializers import ClientSerializer
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
@@ -27,7 +26,7 @@ class BrandViewSet(viewsets.ModelViewSet):
     serializer_class = BrandSerializer
     permission_classes = [IsAuthenticated, IsAdminUserRole]
 
-class ClientViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.filter(role='user')
-    serializer_class = ClientSerializer
-    permission_classes = [IsAuthenticated, IsAdminUserRole]  
+# class ClientViewSet(viewsets.ModelViewSet):
+#     queryset = User.objects.filter(role='user')
+#     serializer_class = ClientSerializer
+#     permission_classes = [IsAuthenticated, IsAdminUserRole]  
