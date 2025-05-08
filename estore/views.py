@@ -1,10 +1,11 @@
-from rest_framework import viewsets
+from rest_framework import viewsets ,filters
 from rest_framework.permissions import IsAuthenticated
 from .permissions import IsAdminUserRole, IsAdminOrReadOnly
 from .models import Product, Category, Brand
 from .serializers import ProductSerializer, CategorySerializer, BrandSerializer
-from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
+from user.models import User
+from user.serializers import ClientSerializer
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
@@ -25,3 +26,8 @@ class BrandViewSet(viewsets.ModelViewSet):
     queryset = Brand.objects.all()
     serializer_class = BrandSerializer
     permission_classes = [IsAuthenticated, IsAdminUserRole]
+
+class ClientViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.filter(role='user')
+    serializer_class = ClientSerializer
+    permission_classes = [IsAuthenticated, IsAdminUserRole]  

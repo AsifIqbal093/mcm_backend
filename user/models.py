@@ -49,6 +49,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     date_joined = models.DateTimeField(auto_now_add=True)  # or `date_joined`
     full_name = models.CharField(max_length=255)  # or `name`
     is_active = models.BooleanField(default=True)
+
+    contact_number = models.CharField(max_length=20, blank=True, null=True)  # or `contact_number`
+    ammount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  # or `amount`
+    order_count = models.PositiveIntegerField(default=0)  # or `order_count`
     role = models.CharField(max_length=20, choices=[('admin', 'Admin'), ('user', 'User')], default='user')
 
     objects = UserManager()
