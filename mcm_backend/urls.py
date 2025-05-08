@@ -38,7 +38,7 @@ urlpatterns = [
         ), name='api-docs'),
     path('api/user/', include('user.urls')),
     path('api/estore/', include('estore.urls')),
-
+    path('api/orders/', include('orders.urls')),
     path('', home, name='home'),
 ]
 if settings.DEBUG:
