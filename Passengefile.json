@@ -1,0 +1,9 @@
+{
+    "app_type": "wsgi",
+    "startup_file": "mcm_backend/wsgi.py",
+    "envvars": {
+      "DJANGO_SETTINGS_MODULE": "mcm_backend.settings"
+    },
+    "python": "/home/estelatechnologi/virtualenv/mcm_backend/3.9/bin/python"
+  }
+  
