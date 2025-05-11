@@ -31,7 +31,7 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'https://backendmcm.estelatechnologies.com/']
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -92,6 +92,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "mcm_backend.wsgi.application"
 
+import pymysql
+pymysql.install_as_MySQLdb()
 
 # Databases
 DATABASES = {

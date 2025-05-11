@@ -38,3 +38,11 @@ class DeliveryInfo(models.Model):
 
     def __str__(self):
         return f"Delivery for Order #{self.order.order_id}"
+
+class OrderProduct(models.Model):
+    order = models.ForeignKey('Order', on_delete=models.CASCADE, related_name='order_products')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+
+    def get_total_price(self):
+        return (self.product.sale_price or 0) * self.quantity

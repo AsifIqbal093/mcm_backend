@@ -15,7 +15,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
     
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['brand', 'category']
+    filterset_fields = ['brand', 'category', 'status']
     search_fields = ['product_name', 'category__name']
     
 
@@ -23,6 +23,9 @@ class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [IsAuthenticated, IsAdminUserRole]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name']
+
     @extend_schema(
         parameters=[
             OpenApiParameter(
@@ -42,12 +45,16 @@ class CategoryViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         
         return super().list(request, *args, **kwargs)
+
 
 
 class BrandViewSet(viewsets.ModelViewSet):
     queryset = Brand.objects.all()
     serializer_class = BrandSerializer
     permission_classes = [IsAuthenticated, IsAdminUserRole]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['brand_name']
+
     @extend_schema(
         parameters=[
             OpenApiParameter(
@@ -65,6 +72,4 @@ class BrandViewSet(viewsets.ModelViewSet):
         if all_data:
             serializer = self.get_serializer(queryset, many=True)
             return Response(serializer.data)
-        
         return super().list(request, *args, **kwargs)
- 
