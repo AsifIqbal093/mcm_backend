@@ -16,43 +16,58 @@ class DeliveryInfoSerializer(serializers.ModelSerializer):
         ]
 
 
+class OrderProductInputSerializer(serializers.Serializer):
+    product_id = serializers.PrimaryKeyRelatedField(queryset=Product.objects.all())
+    quantity = serializers.IntegerField(min_value=1)
+
+
 class OrderSerializer(serializers.ModelSerializer):
-    product_ids = serializers.PrimaryKeyRelatedField(
-        queryset=Product.objects.all(), many=True, write_only=True
-    )
     products = serializers.SerializerMethodField(read_only=True)
     delivery_info = DeliveryInfoSerializer()
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    product_items = OrderProductInputSerializer(many=True, write_only=True)
 
     class Meta:
         model = Order
         fields = [
-            'id', 'user', 'product_ids', 'products', 'date',
+            'id', 'user', 'product_items', 'products', 'date',
             'amount', 'delivery_info'
         ]
         read_only_fields = ['amount']
 
     def get_products(self, obj):
-        return [product.product_name for product in obj.products.all()]
+        return [
+            {
+                'product_name': op.product.product_name,
+                'quantity': op.quantity,
+                'unit_price': op.product.sale_price,
+                'total_price': op.get_total_price()
+            }
+            for op in obj.order_products.all()
+        ]
 
     def create(self, validated_data):
         delivery_data = validated_data.pop('delivery_info')
-        product_ids = validated_data.pop('product_ids')
+        product_items = validated_data.pop('product_items')
 
-        # Calculate total from sale_price
-        products = Product.objects.filter(id__in=[p.id for p in product_ids])
-        total_amount = sum([p.sale_price or 0 for p in products])
-
-        # Create order with calculated amount
         order = Order.objects.create(
             user=validated_data['user'],
-            amount=total_amount,
             payment=validated_data.get('payment', 'pending'),
             status=validated_data.get('status', 'processing')
         )
-        order.products.set(product_ids)
-        DeliveryInfo.objects.create(order=order, **delivery_data)
 
+        total_amount = 0
+        for item in product_items:
+            product = item['product_id']
+            quantity = item['quantity']
+            OrderProduct.objects.create(order=order, product=product, quantity=quantity)
+            total_amount += (product.sale_price or 0) * quantity
+
+        order.amount = total_amount
+        order.save()
+
+        DeliveryInfo.objects.create(order=order, **delivery_data)
         return order
+
 
 
