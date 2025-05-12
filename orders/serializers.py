@@ -53,7 +53,8 @@ class OrderSerializer(serializers.ModelSerializer):
         order = Order.objects.create(
             user=validated_data['user'],
             payment=validated_data.get('payment', 'pending'),
-            status=validated_data.get('status', 'processing')
+            status=validated_data.get('status', 'processing'),
+            amount=0
         )
 
         total_amount = 0

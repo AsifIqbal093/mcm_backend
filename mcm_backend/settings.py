@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'user',
     'estore',
     'orders',
+    'analytics',
     'rest_framework.authtoken',
     'rest_framework',
     'drf_spectacular',
