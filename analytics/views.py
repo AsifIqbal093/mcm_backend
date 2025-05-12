@@ -9,6 +9,8 @@ from user.models import User
 from orders.models import Order, OrderProduct
 from estore.models import Product
 from .serializers import SimpleOrderSerializer
+from django.db.models import Count
+
 
 class DashboardAnalyticsViewSet(ViewSet):
     permission_classes = [IsAuthenticated, IsAdminUserRole]
@@ -24,7 +26,12 @@ class DashboardAnalyticsViewSet(ViewSet):
         daily_sales_total = daily_orders.aggregate(total=Sum('amount'))['total'] or 0
         daily_orders_data = SimpleOrderSerializer(daily_orders, many=True).data
 
-        last_30_orders = Order.objects.filter(date__date__gte=last_30_days)
+
+        last_30_orders = (
+            Order.objects
+            .annotate(product_count=Count('products'))
+            .filter(date__date__gte=last_30_days, product_count__gt=0)
+        )
         last_30_sales = last_30_orders.aggregate(total=Sum('amount'))['total'] or 0
         last_30_orders_data = SimpleOrderSerializer(last_30_orders, many=True).data
 
