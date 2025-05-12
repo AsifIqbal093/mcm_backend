@@ -18,7 +18,7 @@ class DashboardAnalyticsViewSet(ViewSet):
         today = now().date()
         last_30_days = today - timedelta(days=30)
 
-        client_count = User.objects.filter(role='user', is_active=True).count()
+        client_count = User.objects.filter(role='user').count()
 
         daily_orders = Order.objects.filter(date__date=today)
         daily_sales_total = daily_orders.aggregate(total=Sum('amount'))['total'] or 0
@@ -46,6 +46,17 @@ class DashboardAnalyticsViewSet(ViewSet):
             }
             for item in brand_sales
         ]
+        weekly_sales = []
+        for i in range(7):
+            day = today - timedelta(days=i)
+            day_orders = Order.objects.filter(date__date=day)
+            total = day_orders.aggregate(total=Sum('amount'))['total'] or 0
+            weekly_sales.append({
+                'date': day.strftime('%Y-%m-%d'),
+                'sales': round(total, 2)
+            })
+
+        weekly_sales.reverse()
 
         return Response({
             'active_clients': client_count,
@@ -55,5 +66,6 @@ class DashboardAnalyticsViewSet(ViewSet):
                 'total_sales': round(last_30_sales, 2),
                 'orders': last_30_orders_data
             },
+            'weekly_sales': weekly_sales,
             'top_4_brands': top_brands_percentages
         })
