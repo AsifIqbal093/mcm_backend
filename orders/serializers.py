@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Order, DeliveryInfo
+from .models import Order, DeliveryInfo, OrderProduct
 from estore.models import Product
 
 class ProductNameSerializer(serializers.ModelSerializer):
