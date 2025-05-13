@@ -59,8 +59,23 @@ class OrderSerializer(serializers.ModelSerializer):
 
         total_amount = 0
         for item in product_items:
-            product = item['product_id']
+            product_id = item['product_id'].id
             quantity = item['quantity']
+
+            product = Product.objects.filter(id=product_id).first()
+            if not product:
+                raise serializers.ValidationError(f"Product with ID {product_id} not found.")
+            
+            if product.stock < quantity:
+                raise serializers.ValidationError(
+                    f"Insufficient stock for {product.product_name} (Available: {product.stock})"
+                )
+
+            # Update stock and sale quantity
+            product.stock -= quantity
+            product.sale_quantity += quantity
+            product.save()
+
             OrderProduct.objects.create(order=order, product=product, quantity=quantity)
             total_amount += (product.sale_price or 0) * quantity
 
@@ -69,6 +84,56 @@ class OrderSerializer(serializers.ModelSerializer):
 
         DeliveryInfo.objects.create(order=order, **delivery_data)
         return order
+    
+    def update(self, instance, validated_data):
+        delivery_data = validated_data.pop('delivery_info', None)
+        product_items = validated_data.pop('product_items', [])
 
+        # Step 1: Rollback previous product quantities
+        for op in instance.order_products.all():
+            product = Product.objects.filter(id=op.product.id).first()
+            if product:
+                product.stock += op.quantity
+                product.sale_quantity -= op.quantity
+                product.save()
+        instance.order_products.all().delete()
 
+        # Step 2: Update order fields
+        instance.payment = validated_data.get('payment', instance.payment)
+        instance.status = validated_data.get('status', instance.status)
+        total_amount = 0
+
+        for item in product_items:
+            product_id = item['product_id'].id
+            quantity = item['quantity']
+
+            product = Product.objects.filter(id=product_id).first()
+            if not product:
+                raise serializers.ValidationError(f"Product with ID {product_id} not found.")
+            
+            if product.stock < quantity:
+                raise serializers.ValidationError(
+                    f"Insufficient stock for {product.product_name} (Available: {product.stock})"
+                )
+
+            product.stock -= quantity
+            product.sale_quantity += quantity
+            product.save()
+
+            OrderProduct.objects.create(order=instance, product=product, quantity=quantity)
+            total_amount += (product.sale_price or 0) * quantity
+
+        instance.amount = total_amount
+        instance.save()
+
+        # Step 3: Update or create delivery info
+        if delivery_data:
+            if hasattr(instance, 'delivery_info'):
+                for key, value in delivery_data.items():
+                    setattr(instance.delivery_info, key, value)
+                instance.delivery_info.save()
+            else:
+                DeliveryInfo.objects.create(order=instance, **delivery_data)
+
+        return instance
 
