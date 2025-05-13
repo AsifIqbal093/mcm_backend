@@ -16,7 +16,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['brand', 'category', 'status']
-    search_fields = ['product_name', 'category__name']
+    search_fields = ['product_name', 'sku', 'status', 'category__name', 'brand__name']
     
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -24,7 +24,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
     permission_classes = [IsAuthenticated, IsAdminUserRole]
     filter_backends = [filters.SearchFilter]
-    search_fields = ['name']
+    search_fields = ['name', 'sub_categories']
 
     @extend_schema(
         parameters=[
