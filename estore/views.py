@@ -16,7 +16,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['brand', 'category', 'status']
-    search_fields = ['product_name', 'sku', 'status', 'category__name', 'brand__name']
+    search_fields = ['product_name', 'SKU', 'status', 'category__name', 'brand__name']
     
 
 class CategoryViewSet(viewsets.ModelViewSet):
