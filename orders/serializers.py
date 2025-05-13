@@ -74,6 +74,7 @@ class OrderSerializer(serializers.ModelSerializer):
             # Update stock and sale quantity
             product.stock -= quantity
             product.sale_quantity += quantity
+            product.sold_items += quantity
             product.save()
 
             OrderProduct.objects.create(order=order, product=product, quantity=quantity)
