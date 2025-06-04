@@ -8,8 +8,9 @@ from estore.permissions import IsAdminUserRole
 from user.models import User
 from orders.models import Order, OrderProduct
 from estore.models import Product
-from .serializers import SimpleOrderSerializer
+from .serializers import AnalyticsOrderSerializer
 from django.db.models import Count
+from django.db.models import Prefetch
 
 
 class DashboardAnalyticsViewSet(ViewSet):
@@ -22,18 +23,33 @@ class DashboardAnalyticsViewSet(ViewSet):
 
         client_count = User.objects.filter(role='user').count()
 
-        daily_orders = Order.objects.filter(date__date=today)
-        daily_sales_total = daily_orders.aggregate(total=Sum('amount'))['total'] or 0
-        daily_orders_data = SimpleOrderSerializer(daily_orders, many=True).data
-
-
+        order_products_prefetch = Prefetch(
+            'order_products',
+            queryset=OrderProduct.objects.select_related('product')
+        )
+        
+        daily_orders = (
+            Order.objects
+            .filter(date__date=today)
+            .prefetch_related(order_products_prefetch)
+        )
+        
         last_30_orders = (
             Order.objects
             .annotate(product_count=Count('products'))
             .filter(date__date__gte=last_30_days, product_count__gt=0)
+            .prefetch_related(order_products_prefetch)
         )
+        daily_sales_total = daily_orders.aggregate(total=Sum('amount'))['total'] or 0
+        daily_orders_data = AnalyticsOrderSerializer(daily_orders, many=True).data
+
+
+        last_30_orders = (
+            Order.objects
+            .filter(date__date__gte=last_30_days)
+        )
+        
         last_30_sales = last_30_orders.aggregate(total=Sum('amount'))['total'] or 0
-        last_30_orders_data = SimpleOrderSerializer(last_30_orders, many=True).data
 
         brand_sales = (
             OrderProduct.objects
@@ -71,7 +87,6 @@ class DashboardAnalyticsViewSet(ViewSet):
             'daily_orders': daily_orders_data,
             'last_30_days': {
                 'total_sales': round(last_30_sales, 2),
-                'orders': last_30_orders_data
             },
             'weekly_sales': weekly_sales,
             'top_4_brands': top_brands_percentages

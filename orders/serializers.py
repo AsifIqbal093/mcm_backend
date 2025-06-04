@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Order, DeliveryInfo, OrderProduct
+from .models import *
 from estore.models import Product
 
 class ProductNameSerializer(serializers.ModelSerializer):
@@ -138,3 +138,8 @@ class OrderSerializer(serializers.ModelSerializer):
 
         return instance
 
+
+class BannerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Banner
+        fields = ['image', 'position']

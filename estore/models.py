@@ -9,8 +9,18 @@ class Brand(models.Model):
 
 class SubCategory(models.Model):
     name = models.CharField(max_length=100)
+    slug = models.SlugField(unique=False, blank=True, null=True)
+    parent = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='children'
+    )
+    description = models.TextField(blank=True)
+
     def __str__(self):
-        return f"{self.category.name} → {self.name}"
+        return self.name
 
 
 class Category(models.Model):

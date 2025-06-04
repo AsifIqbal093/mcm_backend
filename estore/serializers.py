@@ -1,6 +1,6 @@
 # ---------------- New Model Serializers ---------------- #
 from rest_framework import serializers
-from .models import Product,ProductGallery, Category, SubCategory, Brand
+from .models import *
 
 class BrandSerializer(serializers.ModelSerializer):
     class Meta:
@@ -9,40 +9,49 @@ class BrandSerializer(serializers.ModelSerializer):
 
 
 class SubCategorySerializer(serializers.ModelSerializer):
+    children = serializers.SerializerMethodField()
+
     class Meta:
         model = SubCategory
-        fields = ['id', 'name']
+        fields = ['id', 'name', 'slug', 'description', 'parent', 'children']
+
+    def get_children(self, obj):
+        if obj.children.exists():
+            return SubCategorySerializer(obj.children.all(), many=True).data
+        return []
+    
 
 class CategorySerializer(serializers.ModelSerializer):
-    sub_categories = SubCategorySerializer(many=True)
+    sub_categories = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=SubCategory.objects.all()
+    )
 
     class Meta:
         model = Category
         fields = ['id', 'name', 'slug', 'description', 'created_at', 'sub_categories']
 
     def create(self, validated_data):
-        sub_categories_data = validated_data.pop('sub_categories')
+        sub_categories = validated_data.pop('sub_categories', [])
         category = Category.objects.create(**validated_data)
-        for sub_category_data in sub_categories_data:
-            sub_category = SubCategory.objects.create(**sub_category_data)
-            category.sub_categories.add(sub_category)
+        if sub_categories:
+            category.sub_categories.set(sub_categories)
         return category
-    
-    def update(self, instance, validated_data):
-        sub_categories_data = validated_data.pop('sub_categories', [])
 
-        # Update category fields
+    def update(self, instance, validated_data):
+        sub_categories = validated_data.pop('sub_categories', None)
+
+        # update other fields
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
 
-        # Optional: clear and re-add subcategories
-        instance.sub_categories.clear()
-        for sub_category_data in sub_categories_data:
-            sub_category, _ = SubCategory.objects.get_or_create(**sub_category_data)
-            instance.sub_categories.add(sub_category)
+        # update subcategories if provided
+        if sub_categories is not None:
+            instance.sub_categories.set(sub_categories)
 
         return instance
+
 
 class ProductGallerySerializer(serializers.ModelSerializer):
     class Meta:

@@ -46,3 +46,25 @@ class OrderProduct(models.Model):
 
     def get_total_price(self):
         return (self.product.sale_price or 0) * self.quantity
+
+
+class Banner(models.Model):
+    BANNER_POSITIONS = [
+        ('slider_1', 'Slider 1'),
+        ('slider_2', 'Slider 2'),
+        ('slider_3', 'Slider 3'),
+        ('top_1', 'Banner Top 1'),
+        ('top_2', 'Banner Top 2'),
+        ('home_1', 'Banner Home 1'),
+        ('home_2', 'Banner Home 2'),
+        ('home_3', 'Banner Home 3'),
+        ('footer_1', 'Banner Footer 1'),
+        ('footer_2', 'Banner Footer 2')
+    ]
+
+    image = models.ImageField(upload_to='banners/')
+    position = models.CharField(max_length=20, choices=BANNER_POSITIONS)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.position} - {self.id}"
