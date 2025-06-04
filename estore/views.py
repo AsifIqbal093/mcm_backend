@@ -1,8 +1,8 @@
 from rest_framework import viewsets ,filters
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from .permissions import IsAdminUserRole, IsAdminOrReadOnly
 from .models import Product, Category, Brand
-from .serializers import ProductSerializer, CategorySerializer, BrandSerializer
+from .serializers import *
 from django_filters.rest_framework import DjangoFilterBackend
 from user.models import User
 from drf_spectacular.utils import extend_schema, OpenApiParameter
@@ -23,6 +23,12 @@ class ProductViewSet(viewsets.ModelViewSet):
         'category__name',
         'brand__brand_name'
     ]
+    
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [AllowAny()]
+        return [IsAuthenticated(), IsAdminOrReadOnly()]
+
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
@@ -75,6 +81,28 @@ class BrandViewSet(viewsets.ModelViewSet):
         queryset = self.filter_queryset(self.get_queryset())
 
         if all_data:
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data)
+        return super().list(request, *args, **kwargs)
+
+
+class SubCategoryViewSet(viewsets.ModelViewSet):
+    serializer_class = SubCategorySerializer
+
+    def get_queryset(self):
+        if self.action == 'list':
+            return SubCategory.objects.filter(parent=None)
+        return SubCategory.objects.all()
+    
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name='paginate', type=bool, location=OpenApiParameter.QUERY,
+                            description="Set to false to disable pagination")
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        if request.query_params.get('paginate') == 'false':
+            queryset = self.filter_queryset(self.get_queryset())
             serializer = self.get_serializer(queryset, many=True)
             return Response(serializer.data)
         return super().list(request, *args, **kwargs)

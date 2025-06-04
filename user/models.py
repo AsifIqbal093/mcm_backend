@@ -36,15 +36,25 @@ class UserManager(BaseUserManager):
             raise ValueError('User must have an email!')
         user = self.create_user(email, password)
         user.is_superuser = False
-        user.role = "Admin"
+        user.role = "admin"
+        user.save(using=self._db)
+        return user
+    
+    def create_staffuser(self, email, password):
+        """Create, save and return a admin user."""
+        if not email:
+            raise ValueError('User must have an email!')
+        user = self.create_user(email, password)
+        user.is_superuser = False
+        user.role = "staff"
         user.save(using=self._db)
         return user
 
 
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=255, unique=True)
-    display_name = models.CharField(max_length=255, unique=True)  # or `username`
-    address = models.CharField(max_length=255, blank=True, null=True)  # or `address`
+    display_name = models.CharField(max_length=255)
+    address = models.CharField(max_length=255, blank=True, null=True)
     bio = models.TextField(blank=True, null=True)  # or `bio`
     date_joined = models.DateTimeField(auto_now_add=True)  # or `date_joined`
     full_name = models.CharField(max_length=255)  # or `name`
