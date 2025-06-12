@@ -63,7 +63,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     ammount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     order_count = models.PositiveIntegerField(default=0)
     role = models.CharField(max_length=20, choices=[('admin', 'Admin'), ('user', 'User')], default='user')
-    nif = models.CharField(max_length=50)
+    nif = models.CharField(max_length=50, blank=True, null=True, unique=False)
     company = models.CharField(blank=True, null=True, unique=False, max_length=100)
 
     objects = UserManager()
