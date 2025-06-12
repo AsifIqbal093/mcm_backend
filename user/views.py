@@ -3,16 +3,19 @@ Views for user API and related e-commerce models.
 """
 
 from rest_framework import generics, authentication, permissions, viewsets
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.settings import api_settings
 from rest_framework.response import Response
-from user.models import User
+from user.models import User, Address
 from .permissions import IsAdmin
 from user.serializers import (
     UserSerializer,
     AuthTokenSerializer,
-    UserAdminSerializer
+    UserAdminSerializer,
+    AddressSerializer
 )
 
 # ------------------- USER AUTH ------------------- #
@@ -57,3 +60,32 @@ class UserAdminViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return self.queryset.order_by('-date_joined')
+
+class AddressViewSet(viewsets.ModelViewSet):
+    serializer_class = AddressSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.role == 'admin' or user.is_superuser:
+            return Address.objects.all()
+        return Address.objects.filter(user=user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    def perform_update(self, serializer):
+        user = self.request.user
+        if user.role == 'admin' or user.is_superuser:
+            serializer.save()
+        elif serializer.instance.user == user:
+            serializer.save()
+        else:
+            raise PermissionDenied("You do not have permission to update this address.")
+
+    def perform_destroy(self, instance):
+        user = self.request.user
+        if user.role == 'admin' or user.is_superuser or instance.user == user:
+            instance.delete()
+        else:
+            raise PermissionDenied("You do not have permission to delete this address.")

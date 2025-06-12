@@ -54,17 +54,30 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=255, unique=True)
     display_name = models.CharField(max_length=255)
-    address = models.CharField(max_length=255, blank=True, null=True)
-    bio = models.TextField(blank=True, null=True)  # or `bio`
-    date_joined = models.DateTimeField(auto_now_add=True)  # or `date_joined`
-    full_name = models.CharField(max_length=255)  # or `name`
+    bio = models.TextField(blank=True, null=True)
+    date_joined = models.DateTimeField(auto_now_add=True)
+    full_name = models.CharField(max_length=255)
     is_active = models.BooleanField(default=True)
 
-    contact_number = models.CharField(max_length=20, blank=True, null=True)  # or `contact_number`
-    ammount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  # or `amount`
-    order_count = models.PositiveIntegerField(default=0)  # or `order_count`
+    contact_number = models.CharField(max_length=20, blank=True, null=True)
+    ammount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    order_count = models.PositiveIntegerField(default=0)
     role = models.CharField(max_length=20, choices=[('admin', 'Admin'), ('user', 'User')], default='user')
+    nif = models.CharField(max_length=50, blank=True, null=True, unique=False)
+    company = models.CharField(blank=True, null=True, unique=False, max_length=100)
 
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
+
+
+class Address(models.Model):
+    user = models.ForeignKey(User, related_name='addresses', on_delete=models.CASCADE)
+    street_address = models.CharField(max_length=255)
+    city = models.CharField(max_length=100)
+    country = models.CharField(max_length=100)
+    postal_code = models.CharField(max_length=20)
+    is_default = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.street_address}, {self.city}"

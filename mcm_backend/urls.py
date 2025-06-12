@@ -40,7 +40,6 @@ urlpatterns = [
     path('api/estore/', include('estore.urls')),
     path('api/orders/', include('orders.urls')),
     path('api/analytics/', include('analytics.urls')),
-    path('api/clients/', include('clients.urls')),
     path('', home, name='home'),
 ]
 if settings.DEBUG:

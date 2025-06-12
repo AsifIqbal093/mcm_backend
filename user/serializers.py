@@ -1,7 +1,7 @@
 """
 Serializers for the user API view.
 """
-from .models import User
+from .models import User, Address
 from django.contrib.auth import (
     get_user_model,
     authenticate,
@@ -12,31 +12,45 @@ from django.db.models import Sum, Count
 
 # ---------------- User Serializers ---------------- #
 
+class AddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
+        fields = ['id', 'street_address', 'city', 'country', 'postal_code', 'is_default']
+
+
 class UserSerializer(serializers.ModelSerializer):
-    """Serializer for the user object."""
+    addresses = AddressSerializer(many=True, required=False)
 
     class Meta:
         model = get_user_model()
-        fields = ['email', 'password', 'full_name', 'role', 'address', 'bio', 'display_name', 'contact_number']
+        fields = [
+            'email', 'password', 'full_name', 'role', 'bio', 'display_name',
+            'contact_number', 'addresses'
+        ]
         extra_kwargs = {
-            'password': {
-                'write_only': True,
-                'min_length': 5
-            }
+            'password': {'write_only': True, 'min_length': 5}
         }
 
     def create(self, validated_data):
-        """Create and return a user with encrypted password."""
-        return get_user_model().objects.create_user(**validated_data)
+        addresses_data = validated_data.pop('addresses', [])
+        user = get_user_model().objects.create_user(**validated_data)
+        for address in addresses_data:
+            Address.objects.create(user=user, **address)
+        return user
 
     def update(self, instance, validated_data):
-        """Update and return user"""
+        addresses_data = validated_data.pop('addresses', None)
         password = validated_data.pop('password', None)
         user = super().update(instance, validated_data)
 
         if password:
             user.set_password(password)
             user.save()
+
+        if addresses_data is not None:
+            instance.addresses.all().delete()
+            for address in addresses_data:
+                Address.objects.create(user=instance, **address)
 
         return user
 
