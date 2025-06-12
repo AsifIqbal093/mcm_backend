@@ -142,4 +142,4 @@ class OrderSerializer(serializers.ModelSerializer):
 class BannerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Banner
-        fields = ['image', 'position']
+        fields = ['id', 'image', 'position']

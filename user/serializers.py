@@ -13,9 +13,12 @@ from django.db.models import Sum, Count
 # ---------------- User Serializers ---------------- #
 
 class AddressSerializer(serializers.ModelSerializer):
+    user_id = serializers.IntegerField(write_only=True, required=False)
+
     class Meta:
         model = Address
-        fields = ['id', 'street_address', 'city', 'country', 'postal_code', 'is_default']
+        fields = ['id', 'street_address', 'city', 'country', 'postal_code', 'is_default', 'user_id']
+        read_only_fields = ['id']
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -25,7 +28,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = get_user_model()
         fields = [
             'email', 'password', 'full_name', 'role', 'bio', 'display_name',
-            'contact_number', 'addresses'
+            'contact_number', 'company', 'nif', 'photo', 'addresses'
         ]
         extra_kwargs = {
             'password': {'write_only': True, 'min_length': 5}
@@ -83,12 +86,14 @@ class AuthTokenSerializer(serializers.Serializer):
 class UserAdminSerializer(serializers.ModelSerializer):
     total_order_amount = serializers.SerializerMethodField()
     total_orders = serializers.SerializerMethodField()
+    addresses = AddressSerializer(many=True, read_only=True)
 
     class Meta:
         model = User
         fields = [
             'id', 'full_name', 'contact_number', 'is_active',
-            'total_order_amount', 'total_orders'
+            'total_order_amount', 'total_orders', 'email', 'bio',
+            'company', 'nif', 'photo', 'addresses'
         ]
 
     def get_total_order_amount(self, obj):

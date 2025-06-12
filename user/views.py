@@ -3,7 +3,7 @@ Views for user API and related e-commerce models.
 """
 
 from rest_framework import generics, authentication, permissions, viewsets
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
@@ -67,25 +67,39 @@ class AddressViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if user.role == 'admin' or user.is_superuser:
+        if user.is_superuser or user.role == 'admin':
             return Address.objects.all()
         return Address.objects.filter(user=user)
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        user = self.request.user
+        user_id = self.request.data.get('user_id')
+
+        if user.is_superuser or user.role == 'admin':
+            if user_id:
+                try:
+                    target_user = User.objects.get(id=user_id)
+                except User.DoesNotExist:
+                    raise ValidationError("Target user does not exist.")
+                serializer.save(user=target_user)
+            else:
+                serializer.save(user=user)
+        else:
+            # Regular user can only create for themselves
+            serializer.save(user=user)
 
     def perform_update(self, serializer):
+        target_address = serializer.instance
         user = self.request.user
-        if user.role == 'admin' or user.is_superuser:
-            serializer.save()
-        elif serializer.instance.user == user:
+
+        if user.is_superuser or user.role == 'admin' or target_address.user == user:
             serializer.save()
         else:
             raise PermissionDenied("You do not have permission to update this address.")
 
     def perform_destroy(self, instance):
         user = self.request.user
-        if user.role == 'admin' or user.is_superuser or instance.user == user:
+        if user.is_superuser or user.role == 'admin' or instance.user == user:
             instance.delete()
         else:
             raise PermissionDenied("You do not have permission to delete this address.")
