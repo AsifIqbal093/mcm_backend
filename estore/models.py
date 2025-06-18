@@ -28,6 +28,7 @@ class Category(models.Model):
     slug = models.SlugField(unique=False)
     created_at = models.DateTimeField(auto_now_add=True)
     description = models.TextField(blank=True)
+    image = models.ImageField(upload_to='category_gallery/')
     sub_categories = models.ManyToManyField('SubCategory', related_name='categories', blank=True, null=True)
 
 

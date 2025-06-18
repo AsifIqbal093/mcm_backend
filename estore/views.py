@@ -7,7 +7,15 @@ from django_filters.rest_framework import DjangoFilterBackend
 from user.models import User
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework.response import Response
+import django_filters
+from rest_framework.parsers import MultiPartParser, FormParser
 
+class ProductFilter(django_filters.FilterSet):
+    sale_price = django_filters.RangeFilter()
+
+    class Meta:
+        model = Product
+        fields = ['brand', 'category', 'sale_price']
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
@@ -15,7 +23,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsAdminOrReadOnly]
     
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['brand', 'category', 'status']
+    filterset_class = ProductFilter
     search_fields = [
         'product_name',
         'SKU',
@@ -36,6 +44,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsAdminUserRole]
     filter_backends = [filters.SearchFilter]
     search_fields = ['name', 'sub_categories']
+    parser_classes = [MultiPartParser, FormParser]
 
     @extend_schema(
         parameters=[
@@ -56,6 +65,11 @@ class CategoryViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         
         return super().list(request, *args, **kwargs)
+    
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [AllowAny()]
+        return [IsAuthenticated(), IsAdminOrReadOnly()]
 
 
 
@@ -84,6 +98,11 @@ class BrandViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(queryset, many=True)
             return Response(serializer.data)
         return super().list(request, *args, **kwargs)
+    
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [AllowAny()]
+        return [IsAuthenticated(), IsAdminOrReadOnly()]
 
 
 class SubCategoryViewSet(viewsets.ModelViewSet):
@@ -106,3 +125,8 @@ class SubCategoryViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(queryset, many=True)
             return Response(serializer.data)
         return super().list(request, *args, **kwargs)
+    
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [AllowAny()]
+        return [IsAuthenticated(), IsAdminOrReadOnly()]

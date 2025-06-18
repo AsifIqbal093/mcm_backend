@@ -29,7 +29,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = ['id', 'name', 'slug', 'description', 'created_at', 'sub_categories']
+        fields = ['id', 'name', 'slug', 'description', 'created_at', 'image', 'sub_categories']
 
     def create(self, validated_data):
         sub_categories = validated_data.pop('sub_categories', [])
@@ -99,3 +99,18 @@ class ProductSerializer(serializers.ModelSerializer):
             ProductGallery.objects.create(product=product, image=image)
 
         return product
+    
+    def update(self, instance, validated_data):
+        gallery_images = validated_data.pop("product_gallery", None)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        if gallery_images is not None:
+            ProductGallery.objects.filter(product=instance).delete()
+            for image in gallery_images:
+                ProductGallery.objects.create(product=instance, image=image)
+
+        return instance
+
