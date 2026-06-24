@@ -49,8 +49,9 @@ def create_initial_brands_and_categories(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ('estore', '0001_initial'),
+        ('estore', '0008_subcategory_description_subcategory_parent_and_more'),  # Update this
     ]
+
 
     operations = [
         migrations.RunPython(create_initial_brands_and_categories),
