@@ -58,6 +58,32 @@ class ProductGallerySerializer(serializers.ModelSerializer):
         model = ProductGallery
         fields = ['id', 'image']
 
+class FlexiblePrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
+    """Field that accepts both primary keys and string names for related objects"""
+
+    def to_internal_value(self, data):
+        # If data is a string, try to find the object by name
+        if isinstance(data, str):
+            model = self.queryset.model
+
+            # Try different name fields
+            name_fields = ['brand_name', 'name', 'title']
+            for field in name_fields:
+                if hasattr(model, field):
+                    filter_kwargs = {field: data}
+                    try:
+                        obj = self.queryset.get(**filter_kwargs)
+                        return obj  # Return the object, not the pk
+                    except (model.DoesNotExist, model.MultipleObjectsReturned):
+                        continue
+
+            # If no name field worked, raise error
+            raise serializers.ValidationError(f"Object with name '{data}' does not exist")
+
+        # Otherwise, use the default primary key behavior
+        return super().to_internal_value(data)
+
+
 class ProductSerializer(serializers.ModelSerializer):
     product_thumbnail = serializers.ImageField(required=False)
     gallery = ProductGallerySerializer(many=True, required=False, read_only=True)
@@ -66,6 +92,10 @@ class ProductSerializer(serializers.ModelSerializer):
         write_only=True,
         required=False
     )
+
+    # Override brand and category fields to accept both names and IDs
+    brand = FlexiblePrimaryKeyRelatedField(queryset=Brand.objects.all())
+    category = FlexiblePrimaryKeyRelatedField(queryset=Category.objects.all())
 
     class Meta:
         model = Product
